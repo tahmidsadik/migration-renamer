@@ -1,6 +1,6 @@
-## A simple Migration filename generator for postgrator
+## An utility to rename migrations.
 
-A simple filename generator for [postgrator](https://github.com/rickbergfalk/postgrator)
+getting start `yarn add migration-renamer`
 
 ## Usage
 

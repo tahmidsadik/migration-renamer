@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const prompts = require('prompts');
+const Fuse = require('fuse.js');
+const chalk = require('chalk');
 
 const defaultPadding = 4;
 const defaultMigrationFolder = './../shopup-lite/db-migrations';
@@ -12,16 +14,31 @@ const getMigrationFiles = () => {
     .reverse();
 };
 
+const migrationsFiles = getMigrationFiles().map(f => ({
+  title: f
+}));
+
+const fuseOptions = {
+  keys: ['title'],
+  threshold: 0.5
+};
+
+const fuse = new Fuse(migrationsFiles, fuseOptions);
+
 const rename = (fromMigration, toMigration, dryRun = true) => {
   getMigrationFiles()
     .filter(f => /[0-9]\.(do|undo)\..*\.sql/.test(f))
     .filter(f => parseInt(f.split('.')[0], 10) >= fromMigration)
     .map(f => {
-      const serialId = parseInt(f.split('.')[0], 10);
+      const [first, ...rest] = f.split('.');
+      const serialId = parseInt(first, 10);
       const newSerial = (serialId + toMigration - fromMigration).toString().padStart(defaultPadding, 0);
+      const restFileName = `.${rest.join('.')}`;
 
       if (dryRun) {
-        console.log(`${f} => ${f.replace(/[0-9]*/, newSerial)}`);
+        console.log(
+          `${chalk.yellow(first)}${chalk.gray(restFileName)} => ${chalk.green(newSerial)}${chalk.gray(restFileName)}`
+        );
       } else {
         fs.renameSync(
           path.join(__dirname, defaultMigrationFolder, f),
@@ -48,17 +65,21 @@ const handleRename = async (fromMigration, toMigration) => {
 };
 
 (async () => {
-  const files = getMigrationFiles();
-
   const response = await prompts([
     {
       type: 'autocomplete',
       name: 'migration',
-      message: 'So you want to rename a bunch of migrations? Choose the first file to get started',
+      message: `So you want to rename a bunch of migrations? Choose the ${chalk.yellow(
+        'first file'
+      )} to get started.\n(type a few characters to ${chalk.green('fuzzy filter')} your result)\n`,
       limit: 10,
-      choices: files.map(f => ({
-        title: f
-      }))
+      choices: [],
+      suggest: async (input, _choices) => {
+        if (!input) {
+          return migrationsFiles;
+        }
+        return fuse.search(input);
+      }
     },
     {
       type: 'number',
