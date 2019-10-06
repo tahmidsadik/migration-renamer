@@ -1,6 +1,6 @@
 {
   "name": "@tahmidsadik112/migration-renamer",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Migration file renamer utility",
   "bin": {
     "migration-renamer": "./main.js"

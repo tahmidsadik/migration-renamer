@@ -5,7 +5,7 @@ const Fuse = require('fuse.js');
 const chalk = require('chalk');
 
 const defaultPadding = 4;
-const defaultMigrationFolder = './../shopup-lite/db-migrations';
+const defaultMigrationFolder = 'db-migrations';
 
 const getMigrationFiles = () => {
   return fs
@@ -41,8 +41,8 @@ const rename = (fromMigration, toMigration, dryRun = true) => {
         );
       } else {
         fs.renameSync(
-          path.join(__dirname, defaultMigrationFolder, f),
-          path.join(__dirname, defaultMigrationFolder, f.replace(/[0-9]*/, newSerial))
+          path.resolve(defaultMigrationFolder, f),
+          path.resolve(defaultMigrationFolder, f.replace(/[0-9]*/, newSerial))
         );
       }
     });
